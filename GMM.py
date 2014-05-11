@@ -66,7 +66,7 @@ def crossvali(data,label):
             test.append(data[testcv[i]])# test data
             tlabel.append(label[testcv[i]])
         error = guerror(train,test,tlabel)#run the knn
-        results.append(1-float(sum(error))/float(len(error)))#get the total error
+        results.append(1-float(sum(error))/float(len(error)))#get the total error rate
     print results
             
 
