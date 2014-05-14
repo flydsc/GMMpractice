@@ -20,24 +20,28 @@ def read_data():#loading the data from iris dataset
     class3=np.array([line[:4] for line in lines if line[-1]=="Iris-virginica"], dtype=np.float)
     #restore the data without class label
     data = np.array([line[:4] for line in lines], dtype=np.float)
-    label = [line[4] for line in lines]
+    labeltemp = [line[4] for line in lines]
+    label = [classlabelfun(i) for i in labeltemp]
+        
     #data = []
     #data += [line for line in lines]
     classset += [class1]
     classset += [class2]
     classset += [class3]
+    print data
 
     return classset,data,label#return data in different classes and the whole data without class label
 
-def guerror(train,test,tlabel):
-    g = mixture.GMM(n_components=3)
+def guerror(train,test,trainlabel,tlabel):
+    g = mixture.GMM(n_components=3,covariance_type='spherical', init_params='wc', n_iter=100)
+    g.mean_ = np.mean(trainlabel)
     g.fit(list(train[:4]))
     error=[]
     for i in range(len(test)):
         num = int(g.predict([list(test[i][:4])])[0])
-        label = classlabelfun(tlabel[i])
-        print num,label
-        if num == label:
+        #label = classlabelfun(tlabel[i])
+        print num,tlabel[i]
+        if num == tlabel[i]:
             error.append(0)
         else: 
             error.append(1)
@@ -46,41 +50,46 @@ def guerror(train,test,tlabel):
 
 def classlabelfun(label):
     if label == "Iris-setosa":
-        classlabel = 1
-    elif label == 'Iris-versicolor':
         classlabel = 0
+    elif label == 'Iris-versicolor':
+        classlabel = 1
     elif label == 'Iris-virginica':
         classlabel = 2
     return classlabel
 
-def crossvali(data,label):
+def crossvali(data,rawlabel):
     cv = cross_validation.KFold(len(data), n_folds= 10, indices=True)#the corss validation from library
     results = []  
     for traincv, testcv in cv: #get the train and test data
         train =[]
         test = []
+        trainlabel =[]
         tlabel =[]
         for i in range(len(traincv)):
             train.append(data[traincv[i]])#train data
+            trainlabel.append(label[traincv[i]])
         for i in range(len(testcv)):
             test.append(data[testcv[i]])# test data
             tlabel.append(label[testcv[i]])
-        error = guerror(train,test,tlabel)#run the knn
-        results.append(1-float(sum(error))/float(len(error)))#get the total error rate
+        error = guerror(train,test,trainlabel,tlabel)#run the knn
+        results.append(float(sum(error))/float(len(error)))#get the total error rate
     print results
             
 
 if __name__ == '__main__':
     classset,data,label = read_data()
     classg=[]
+    '''
     for i in range(len(classset)):
         g = mixture.GMM(n_components=1)
+        g.means_ = i
         g.fit(classset[i][:,:4])
         classg.append(g)  
-    #print [classg[i].means_ for i in range(len(classg))]
-    #print [classg[i].covars_ for i in range(len(classg))]
-    g = mixture.GMM(n_components=3)
-    g.fit(data[:,:4])
+    print [classg[i].means_ for i in range(len(classg))]
+    print [classg[i].covars_ for i in range(len(classg))]
+    '''
+    #g = mixture.GMM(n_components=3)
+    #g.fit(data[:,:4])
     #print g.means_
     #print g.covars_
     #print classset[0][0,:4]
